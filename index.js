@@ -1,7 +1,15 @@
 const express = require('express')
-const app = express()
+const morgan = require('morgan')
 
+const app = express()
 app.use(express.json())
+
+morgan.token('data', (request) => {
+  return '{"name":"' + request.body["name"] +'","number":"'+ request.body["number"] + '"}';
+})
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :data'))
+
 
 let persons = [
     { 
@@ -32,9 +40,7 @@ app.get('/api/persons', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id);
-    console.log(id)
     const person = persons.find(person => person.id === id)
-    console.log(person)
     if (person) {       
         response.json(person);
     } else {
@@ -63,8 +69,10 @@ const generateId = () => {
 }
 
 app.post('/api/persons', (request, response) => {
+
   const body = request.body;
-  const names = [...persons.map(p => p.name)]
+  const names = persons.map(p => p.name)
+  console.log('names', names)
   if (!(body.name || body.number)) {
     return response.status(400).json({
       error: 'name or number missing'
@@ -82,7 +90,6 @@ app.post('/api/persons', (request, response) => {
   }
 
   persons = persons.concat(person)
-  console.log(persons)
   response.json(persons)
 })
 
